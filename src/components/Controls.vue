@@ -5,9 +5,8 @@
         <h3>Invite participants</h3>
         <label for="urlInput">Share URL below to invite others</label>
         <div>
-            <!-- Room URL to copy and share -->
-            <input type="text" id="urlInput" :value="roomUrl" />
-            <button @click="copyUrl" class="teal">{{ copyButtonText }}</button>
+            <input type="text" id="urlInput" :value="roomURL" />
+            <button @click="store.copyTextToClipboard" class="teal">{{ copyButtonText }}</button>
         </div>
         <hr />
         <h3>Example custom controls</h3>
@@ -15,84 +14,32 @@
             You can also create your own meeting controls using daily-js methods
         </p>
         <div>
-            <button @click="toggleCamera">Toggle camera</button>
-            <button @click="toggleMic">Toggle mic</button>
-            <button @click="toggleScreenShare">Toggle screen share</button>
-            <button @click="expandFullscreen">Expand fullscreen</button>
-            <button @click="toggleLocalVideo">
+            <button @click="store.toggleCamera">Toggle camera</button>
+            <button @click="store.toggleMic">Toggle mic</button>
+            <button @click="store.toggleScreenShare">Toggle screen share</button>
+            <button @click="store.expandFullscreen">Expand fullscreen</button>
+            <button @click="store.toggleLocalVideo">
                 {{ localVideoText }} local video
             </button>
-            <button @click="toggleRemoteParticipants">
+            <button @click="store.toggleRemoteParticipants">
                 {{ remoteVideoText }} remote participants (Speaker view only)
             </button>
-            <button @click="leaveCall">
+            <button @click="store.leaveCall">
                 Leave call
             </button>
         </div>
     </div>
 </template>
 
-<script>
-export default {
-    name: "Controls",
-    props: ["roomUrl", "callFrame"],
-    data() {
-        return {
-            copyButtonText: "Copy URL",
-            localVideoText: "Hide",
-            remoteVideoText: "Hide",
-        };
-    },
-    methods: {
-        copyTextToClipboard(text) {
-            if (!navigator.clipboard) {
-                return;
-            }
-            navigator.clipboard.writeText(text).then(
-                function () {
-                    console.log("Async: Copying to clipboard was successful!");
-                },
-                function (err) {
-                    console.error("Async: Could not copy text: ", err);
-                }
-            );
-        },
-        copyUrl() {
-            this.copyTextToClipboard(this.roomUrl);
-            this.copyButtonText = "Copied!";
-        },
-        toggleCamera() {
-            this.callFrame.setLocalVideo(!this.callFrame.localVideo());
-        },
-        toggleMic() {
-            this.callFrame.setLocalAudio(!this.callFrame.localAudio());
-        },
-        toggleScreenShare() {
-            const participants = this.callFrame.participants();
-            if (participants?.local?.screen) {
-                this.callFrame.stopScreenShare();
-            } else {
-                this.callFrame.startScreenShare();
-            }
-        },
-        expandFullscreen() {
-            this.callFrame.requestFullscreen();
-        },
-        toggleLocalVideo() {
-            const hidden = !this.callFrame.showLocalVideo();
-            this.localVideoText = hidden ? "Hide" : "Show";
-            this.callFrame.setShowLocalVideo(hidden);
-        },
-        toggleRemoteParticipants() {
-            const hidden = !this.callFrame.showParticipantsBar();
-            this.remoteVideoText = hidden ? "Hide" : "Show";
-            this.callFrame.setShowParticipantsBar(hidden);
-        },
-        leaveCall() {
-            this.callFrame.leave().then(() => this.callFrame.destroy());
-        },
-    },
-};
+<script setup>
+import { storeToRefs } from "pinia";
+import { useVideoStore } from '../store/VideoStore';
+import { useDailyStore } from '../store/Dailystore';
+
+const store = useVideoStore()
+const DailyStore = useDailyStore()
+const { copyButtonText, localVideoText, remoteVideoText } = storeToRefs(store)
+const { roomURL } = storeToRefs(DailyStore)
 </script>
 
 <style scoped>
